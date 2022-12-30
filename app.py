@@ -12,6 +12,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
 db.init_app(app)
 marsh = Marshmallow(app)
 
+# Creating a Fernet Key to encrypt passwords. Key should be shifted to env variables later.
 fernet_key = b'v__sKq22Hrm3BsoJz-WB6VmJrwHcwxLmYX2toWEL7aI='
 fernet = Fernet(fernet_key)
 
@@ -95,6 +96,10 @@ class UserItemSchema(marsh.Schema):
 
 # Helpers
 def validate_user(email, password, is_encrypted=True):
+    """
+    Checks if a user with given email and password exists in the database. If is-encrypted
+    is set to True, decrypts the given password before checking.
+    """
     if is_encrypted:
         password = fernet.decrypt(password).decode()
     user = User.query.filter_by(email=email, password=password).first()
@@ -102,6 +107,10 @@ def validate_user(email, password, is_encrypted=True):
 
 
 def get_diet_aggregate(user_items: list) -> dict:
+    """
+    Returns the total number of distinct items and the total calories of the given list of
+    items.
+    """
     item_count = len(user_items)
     calorie_count = 0
     for user_item in user_items:
@@ -112,6 +121,9 @@ def get_diet_aggregate(user_items: list) -> dict:
 
 # Wrappers
 def require_login(function):
+    """
+    Checks if a user is logged in using the cookies set on successfull login or signup.
+    """
     def wrapper(**kwargs):
         try:
             email, password = request.cookies.get('logged_in').split("$")
@@ -131,6 +143,9 @@ def require_login(function):
 @app.route('/users')
 @require_login
 def get_users_list(user):
+    """
+    Accessible only by admin users. Lists all users in the database
+    """
     if not user or not user.is_admin:
         resp = ({"message": "Unauthorised Attempt"}, 403)
     else:
@@ -142,6 +157,10 @@ def get_users_list(user):
 
 @app.route('/top-food-items')
 def get_top_food_items():
+    """
+    Accessible by everyone, even if not logged in. Displays the top food items in the 
+    database.
+    """
     sort_by = request.args.get('order_by')
     item_schema = ItemSchema(many=True)
     if not sort_by or sort_by == 'consumers':
@@ -155,6 +174,9 @@ def get_top_food_items():
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
+    """
+    Registers a user.
+    """
     email = request.values.get('email')
     if User.query.filter_by(email=email).all():
         return {"message": "Email already in use."}, 400
@@ -169,9 +191,10 @@ def signup():
     db.session.commit()
 
     encrypted_password = fernet.encrypt(user.password.encode())
+    user_schema = UserSchema()
 
     return (
-        {"message": "Registration successful"},
+        {"message": "Registration successful", "user": user_schema.dump(user)},
         201,
         {'Set-Cookie': f'logged_in={user.email}${encrypted_password}'}
     )
@@ -179,6 +202,9 @@ def signup():
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
+    """
+    Logs in a user. Sets a cookie in browser to identify user.
+    """
     if request.method == "POST":
         email = request.values.get('email')
         password = request.values.get('password')
@@ -203,12 +229,18 @@ def login():
 @app.route('/logout')
 @require_login
 def logout(user):
+    """
+    Logs out a user. Resets the cookie that was set while logging in.
+    """
     return {"message": f"{user.email} logged out successfully"}, 200, {"Set-Cookie": "logged_in=$"}
 
 
 @app.route('/diet')
 @require_login
 def get_diet(user):
+    """
+    Displays a brief overview of the users diet.
+    """
     user_items = UserItem.query.filter_by(user_id=user.id)
     diet = {}
     for weekday in range(1, 8):
@@ -221,6 +253,9 @@ def get_diet(user):
 @app.route('/diet/<weekday>', methods=["GET", "POST"])
 @require_login
 def get_daily_diet(user, weekday):
+    """
+    Returns a detailed diet of the user on a particular day.
+    """
     if request.method == "POST":
         item_id = request.values.get('item_id')
         if not item_id:
