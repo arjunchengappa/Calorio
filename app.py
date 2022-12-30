@@ -2,6 +2,7 @@ from flask import Flask, request
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow import fields
+from cryptography.fernet import Fernet
 
 
 # Configuration
@@ -10,6 +11,9 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
 db.init_app(app)
 marsh = Marshmallow(app)
+
+fernet_key = b'v__sKq22Hrm3BsoJz-WB6VmJrwHcwxLmYX2toWEL7aI='
+fernet = Fernet(fernet_key)
 
 
 # Models
@@ -90,7 +94,9 @@ class UserItemSchema(marsh.Schema):
 
 
 # Helpers
-def validate_user(email, password):
+def validate_user(email, password, is_encrypted=True):
+    if is_encrypted:
+        password = fernet.decrypt(password).decode()
     user = User.query.filter_by(email=email, password=password).first()
     return user
 
@@ -162,10 +168,12 @@ def signup():
     db.session.add(user)
     db.session.commit()
 
+    encrypted_password = fernet.encrypt(user.password.encode())
+
     return (
         {"message": "Registration successful"},
         201,
-        {'Set-Cookie': f'logged_in={user.email}${user.password}'}
+        {'Set-Cookie': f'logged_in={user.email}${encrypted_password}'}
     )
 
 
@@ -174,7 +182,8 @@ def login():
     if request.method == "POST":
         email = request.values.get('email')
         password = request.values.get('password')
-        user = validate_user(email, password)
+        user = validate_user(email, password, is_encrypted=False)
+        encrypted_password = fernet.encrypt(password.encode())
         if user:
             user_schema = UserSchema()
             return (
@@ -184,7 +193,7 @@ def login():
                 },
                 200,
                 {
-                    "Set-Cookie": f"logged_in={user.email}${user.password}"
+                    "Set-Cookie": f"logged_in={user.email}${encrypted_password}"
                 }
             )
         else:
