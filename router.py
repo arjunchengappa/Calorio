@@ -3,7 +3,6 @@ from flask import Blueprint, request
 from decorators import require_admin, require_login
 from encryption import fernet
 from helpers import DatabaseService, get_diet_aggregate
-from models import Item, User, UserItem, db
 from schemas import ItemSchema, UserItemSchema, UserSchema
 from validators import validate_password
 
@@ -141,7 +140,7 @@ def get_daily_diet(user, weekday):
         else:
             item = db_serice.query_item_by_id(item_id)
 
-        user_item = db_serice.add_user_item(user.id, item.id, calories, quantity, weekday)
+        db_serice.add_user_item(user.id, item.id, calories, quantity, weekday)
         item_schema = ItemSchema()
         return {"message": "Diet update successful", "item": item_schema.dump(item)}, 201
 

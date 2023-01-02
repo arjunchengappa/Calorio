@@ -1,7 +1,9 @@
 from flask import request
+
 from helpers import DatabaseService
 
 db_service = DatabaseService()
+
 
 def require_login(function):
     """

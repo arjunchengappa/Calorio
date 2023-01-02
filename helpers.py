@@ -1,6 +1,6 @@
-from models import User, Item, UserItem
-from models import db
 from encryption import fernet
+from models import Item, User, UserItem, db
+
 
 def get_diet_aggregate(user_items: list) -> dict:
     """
@@ -70,7 +70,6 @@ class DatabaseService:
         db.session.add(user_item)
         db.session.commit()
         return user_item
-
 
     def query_all_items():
         return Item.query.filtry_by().all()
