@@ -1,7 +1,7 @@
 from flask import request
+from helpers import DatabaseService
 
-from validators import validate_user
-
+db_service = DatabaseService()
 
 def require_login(function):
     """
@@ -10,7 +10,7 @@ def require_login(function):
     def wrapper(**kwargs):
         try:
             email, password = request.cookies.get('logged_in').split("$")
-            user = validate_user(email, password.encode())
+            user = db_service.query_user(email, password)
             if not user:
                 return {"message": "User not logged in."}, 403
             kwargs['user'] = user
@@ -26,7 +26,7 @@ def require_admin(function):
     def wrapper(**kwargs):
         try:
             email, password = request.cookies.get('logged_in').split("$")
-            user = validate_user(email, password.encode())
+            user = db_service.query_user(email, password, True)
 
             if not user:
                 return {"message": "User not logged in."}, 403

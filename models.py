@@ -28,10 +28,3 @@ class UserItem(db.Model):
     quantity = db.Column(db.String)
     total_calories = db.Column(db.Integer, default=0)
     weekday = db.Column(db.Integer)
-
-
-class CalorieGoal(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    per_day_limit = db.Column(db.Integer)
-    created_at = db.Column(db.DateTime)
