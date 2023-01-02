@@ -1,14 +1,14 @@
 from flask import Blueprint, request
+
+from decorators import require_admin, require_login
 from encryption import fernet
-from validators import validate_password
-from decorators import require_login
-from schemas import UserItemSchema, UserSchema, ItemSchema
-from models import User, UserItem, Item
-from validators import validate_user, validate_password
 from helpers import get_diet_aggregate
-from models import db
+from models import Item, User, UserItem, db
+from schemas import ItemSchema, UserItemSchema, UserSchema
+from validators import validate_password, validate_user
 
 calorio = Blueprint('calorio', __name__, template_folder='templates')
+
 
 # Routing
 @calorio.route("/")
@@ -17,7 +17,7 @@ def index():
 
 
 @calorio.route('/users')
-@require_login
+@require_admin
 def get_users_list(user):
     """
     Accessible only by admin users. Lists all users in the database
@@ -34,7 +34,7 @@ def get_users_list(user):
 @calorio.route('/top-food-items')
 def get_top_food_items():
     """
-    Accessible by everyone, even if not logged in. Displays the top food items in the 
+    Accessible by everyone, even if not logged in. Displays the top food items in the
     database.
     """
     item_schema = ItemSchema(many=True)

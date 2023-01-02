@@ -1,7 +1,8 @@
 from flask import Flask
+
 from models import db
-from schemas import marsh
 from router import calorio
+from schemas import marsh
 
 # Configuration
 app = Flask(__name__)

@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+
 # Models
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -34,4 +35,3 @@ class CalorieGoal(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     per_day_limit = db.Column(db.Integer)
     created_at = db.Column(db.DateTime)
-    

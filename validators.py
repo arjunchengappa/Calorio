@@ -1,6 +1,7 @@
 import re
-from models import User
+
 from encryption import fernet
+from models import User
 
 
 def validate_password(password):
@@ -9,6 +10,7 @@ def validate_password(password):
     else:
         return False
 
+
 def validate_user(email, password, is_encrypted=True):
     """
     Checks if a user with given email and password exists in the database. If is-encrypted
@@ -16,6 +18,6 @@ def validate_user(email, password, is_encrypted=True):
     """
     if is_encrypted:
         password = fernet.decrypt(password).decode()
-    
+
     user = User.query.filter_by(email=email, password=password).first()
     return user

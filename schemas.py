@@ -1,8 +1,10 @@
 from flask_marshmallow import Marshmallow
 from marshmallow import fields
-from models import User, UserItem, Item
+
+from models import Item, User, UserItem
 
 marsh = Marshmallow()
+
 
 # Schema
 class UserSchema(marsh.Schema):
