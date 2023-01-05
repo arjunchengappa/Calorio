@@ -1,6 +1,8 @@
 from flask import request
-
 from helpers import DatabaseService
+
+from encryption import fernet
+from schemas import UserSchema
 
 db_service = DatabaseService()
 
@@ -12,11 +14,18 @@ def require_login(function):
     def wrapper(**kwargs):
         try:
             email, password = request.cookies.get('logged_in').split("$")
-            user = db_service.query_user(email, password)
+            decrypted_password = fernet.decrypt(password).decode()
+
+            user_schema = UserSchema()
+
+            user = user_schema.query_user(email, decrypted_password)
+
             if not user:
                 return {"message": "User not logged in."}, 403
+
             kwargs['user'] = user
             return function(**kwargs)
+
         except ValueError:
             return {"message": "User not logged in."}, 403
 

@@ -1,7 +1,7 @@
 from flask_marshmallow import Marshmallow
 from marshmallow import fields
 
-from models import Item, User, UserItem
+from models import Item, User, UserItem, db
 
 marsh = Marshmallow()
 
@@ -15,6 +15,31 @@ class UserSchema(marsh.Schema):
     last_name = fields.Str()
     email = fields.Email()
 
+    def query_all_users(self):
+        query = User.query.all()
+        return self.dump(query, many=True)
+
+    def query_user(self, email, password):
+        query = User.query.filter_by(email=email, password=password).first()
+        return self.dump(query)
+
+    def query_user_by_email(self, email):
+        query = User.query.filter_by(email=email).first()
+        return self.dump(query)
+
+    def add_new_user(self, first_name, last_name, email, password):
+        user = User(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            password=password
+        )
+
+        db.session.add(user)
+        db.session.commit()
+
+        return self.dump(user)
+
 
 class ItemSchema(marsh.Schema):
     class Meta:
@@ -25,6 +50,24 @@ class ItemSchema(marsh.Schema):
     calories = fields.Integer()
     consumer_count = fields.Integer()
     picture_url = fields.URL()
+
+    def query_all_items(self):
+        query = Item.query.filter_by()
+        return self.dump(query, many=True)
+
+    def query_top_items(self):
+        query = Item.query.order_by(Item.consumer_count).limit(10)
+        return self.dump(query, many=True)
+
+    def query_item_by_id(self, item_id):
+        query = Item.query.filter_by(item_id=item_id).first()
+        return self.dump(query)
+
+    def add_new_item(self, name, calories, picture_url):
+        item = Item(name=name, calories=calories, picture_url=picture_url)
+        db.session.add(item)
+        db.session.commit()
+        return self.dump(item)
 
 
 class UserItemSchema(marsh.Schema):
@@ -42,3 +85,23 @@ class UserItemSchema(marsh.Schema):
         item = Item.query.filter_by(id=user_item.item_id).first()
         item_schema = ItemSchema()
         return item_schema.dump(item)
+
+    def query_user_items(self, user_id):
+        query = UserItem.query.filter_by(user_id=user_id).order_by(UserItem.weekday)
+        return self.dump(query, many=True)
+
+    def query_user_items_by_weekday(self, user_id, weekday):
+        query = UserItem.query.filter_by(user_id=user_id, weekday=weekday)
+        return self.dump(query, many=True)
+
+    def add_user_item(self, user_id, item_id, calories, quantity, weekday):
+        user_item = UserItem(
+            user_id=user_id,
+            item_id=item_id,
+            total_calories=calories*quantity,
+            quantity=quantity,
+            weekday=weekday
+        )
+        db.session.add(user_item)
+        db.session.commit()
+        return self.dump(user_item)
