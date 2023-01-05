@@ -1,10 +1,7 @@
 from flask import request
-from helpers import DatabaseService
 
 from encryption import fernet
 from schemas import UserSchema
-
-db_service = DatabaseService()
 
 
 def require_login(function):

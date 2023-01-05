@@ -1,20 +1,10 @@
 from flask import Flask
 
-from models import db
-from router import calorio
-from schemas import marsh
+from setup import setup_app
 
-# Configuration
 app = Flask(__name__)
-app.register_blueprint(calorio)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
-db.init_app(app)
-marsh.init_app(app)
-
-with app.app_context():
-    db.drop_all()
-    db.create_all()
+setup_app(app)
 
 
-if __name__ == 'main':
+if __name__ == '__main__':
     app.run()
