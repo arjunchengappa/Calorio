@@ -1,15 +1,16 @@
-from flask_marshmallow import Marshmallow
 from marshmallow import fields
+from marshmallow.exceptions import ValidationError
 
-from models import Item, User, UserItem, db
-
-marsh = Marshmallow()
+from project import db, marsh
+from project.models import Item, User, UserItem
+from project.validators import validate_password
 
 
 # Schema
 class UserSchema(marsh.Schema):
     class Meta:
         model = User
+        load_instance = True
     id = fields.Integer()
     first_name = fields.Str()
     last_name = fields.Str()
@@ -28,6 +29,15 @@ class UserSchema(marsh.Schema):
         return self.dump(query)
 
     def add_new_user(self, first_name, last_name, email, password):
+        error = self.validate({
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name
+        })
+
+        if error or not validate_password(password):
+            raise ValidationError("Invalid Input")
+
         user = User(
             first_name=first_name,
             last_name=last_name,

@@ -1,7 +1,9 @@
 from flask import request
 
-from encryption import fernet
-from schemas import UserSchema
+from project.encryption import fernet
+from project.schemas import UserSchema
+
+user_schema = UserSchema()
 
 
 def require_login(function):
@@ -12,8 +14,6 @@ def require_login(function):
         try:
             email, password = request.cookies.get('logged_in').split("$")
             decrypted_password = fernet.decrypt(password).decode()
-
-            user_schema = UserSchema()
 
             user = user_schema.query_user(email, decrypted_password)
 
@@ -34,7 +34,9 @@ def require_admin(function):
     def wrapper(**kwargs):
         try:
             email, password = request.cookies.get('logged_in').split("$")
-            user = db_service.query_user(email, password, True)
+            decrypted_password = fernet.decrypt(password).decode()
+
+            user = user_schema.query_user(email, decrypted_password)
 
             if not user:
                 return {"message": "User not logged in."}, 403

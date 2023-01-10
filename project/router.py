@@ -1,20 +1,20 @@
 from flask import Blueprint, request
+from marshmallow.exceptions import ValidationError
 
-from decorators import require_admin, require_login
-from encryption import fernet
-from schemas import ItemSchema, UserItemSchema, UserSchema
-from validators import validate_password
+from project.decorators import require_admin, require_login
+from project.encryption import fernet
+from project.schemas import ItemSchema, UserItemSchema, UserSchema
 
-calorio = Blueprint('calorio', __name__, template_folder='templates')
+calorio_blueprint = Blueprint('calorio', __name__, template_folder='templates')
 
 
 # Routing
-@calorio.route("/")
+@calorio_blueprint.route("/")
 def index():
     return {"message": "Welcome to Calorio"}, 200
 
 
-@calorio.route('/users')
+@calorio_blueprint.route('/users')
 @require_admin
 def get_users_list(user):
     """
@@ -28,7 +28,7 @@ def get_users_list(user):
     return resp
 
 
-@calorio.route('/top-food-items')
+@calorio_blueprint.route('/top-food-items')
 def get_top_food_items():
     """
     Accessible by everyone, even if not logged in. Displays the top food items in the
@@ -38,7 +38,7 @@ def get_top_food_items():
     return item_schema.query_top_items()
 
 
-@calorio.route("/signup", methods=["POST"])
+@calorio_blueprint.route("/signup", methods=["POST"])
 def signup():
     """
     Registers a user.
@@ -52,10 +52,10 @@ def signup():
     if user_schema.query_user_by_email(email):
         return {"message": "Email already in use."}, 400
 
-    if not validate_password(password):
-        return {"message": "Invalid Password"}, 400
-
-    user = user_schema.add_new_user(first_name, last_name, email, password)
+    try:
+        user = user_schema.add_new_user(first_name, last_name, email, password)
+    except ValidationError:
+        return {"message": "Invalid Input"}, 400
 
     encrypted_password = fernet.encrypt(password.encode())
 
@@ -66,7 +66,7 @@ def signup():
     )
 
 
-@calorio.route('/login', methods=["POST"])
+@calorio_blueprint.route('/login', methods=["POST"])
 def login():
     """
     Logs in a user. Sets a cookie in browser to identify user.
@@ -94,7 +94,7 @@ def login():
         return {"message": "Login Unsuccessful."}, 403
 
 
-@calorio.route('/logout')
+@calorio_blueprint.route('/logout')
 @require_login
 def logout(user):
     """
@@ -103,7 +103,7 @@ def logout(user):
     return {"message": f"{user['email']} logged out successfully"}, 200, {"Set-Cookie": "logged_in=$"}
 
 
-@calorio.route('/diet')
+@calorio_blueprint.route('/diet')
 @require_login
 def get_diet(user):
     """
@@ -114,7 +114,7 @@ def get_diet(user):
     return {"diet": user_items}, 200
 
 
-@calorio.route('/diet/<weekday>', methods=["GET", "POST"])
+@calorio_blueprint.route('/diet/<weekday>', methods=["GET", "POST"])
 @require_login
 def get_daily_diet(user, weekday):
     """
