@@ -6,9 +6,8 @@ db = SQLAlchemy()
 marsh = Marshmallow()
 
 
-def create_app(config_filename: str = 'config.py') -> Flask:
+def create_app(config_file: str = '../config.json') -> Flask:
     app = Flask(__name__)
-    # app.config.from_pyfile(config_filename)
 
     register_blueprints(app)
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
