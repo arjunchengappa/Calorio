@@ -6,7 +6,7 @@ from project import create_app, db
 from project.models import User
 
 
-@fixture
+@fixture(scope="module")
 def app() -> Flask:
     app = create_app()
     app.config.update({
@@ -16,7 +16,7 @@ def app() -> Flask:
     yield app
 
 
-@fixture
+@fixture(scope="module")
 def client(app: Flask) -> FlaskClient:
     with app.test_client() as testing_client:
         # Establish an application context
@@ -24,21 +24,17 @@ def client(app: Flask) -> FlaskClient:
             yield testing_client
 
 
-@fixture
-def new_user(app: Flask) -> User:
+@fixture(scope="module")
+def init_database(client: FlaskClient) -> None:
+    db.create_all()
+
     user = User(
         email="test_user_1@calorio.com",
         password="password123",
         first_name="test",
         last_name="user_1"
     )
-    yield user
-
-
-@fixture
-def init_database(client: FlaskClient, new_user) -> None:
-    db.create_all()
-    db.session.add(new_user)
+    db.session.add(user)
     db.session.commit()
 
     yield

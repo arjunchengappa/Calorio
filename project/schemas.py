@@ -69,12 +69,14 @@ class ItemSchema(marsh.Schema):
         query = Item.query.order_by(Item.consumer_count).limit(10)
         return self.dump(query, many=True)
 
-    def query_item_by_id(self, item_id):
-        query = Item.query.filter_by(item_id=item_id).first()
-        return self.dump(query)
+    def query_and_increment_item_by_id(self, item_id):
+        item = Item.query.filter_by(id=item_id).first()
+        item.consumer_count += 1
+        db.session.commit()
+        return self.dump(item)
 
     def add_new_item(self, name, calories, picture_url):
-        item = Item(name=name, calories=calories, picture_url=picture_url)
+        item = Item(name=name, calories=calories, picture_url=picture_url, consumer_count=1)
         db.session.add(item)
         db.session.commit()
         return self.dump(item)

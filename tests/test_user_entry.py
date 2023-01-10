@@ -41,23 +41,20 @@ def test_new_user_signup_success(client: FlaskClient) -> None:
     verify_user_cookie(user, response.headers["Set-Cookie"])
 
 
-def test_user_login_success(client: FlaskClient, init_database: None, new_user: User) -> None:
+def test_user_login_success(client: FlaskClient, init_database: None) -> None:
     response = client.post("/login", data={
-        "email": new_user.email,
-        "password": new_user.password
+        "email": "test_user_1@calorio.com",
+        "password": "password123"
     })
+
+    user = User.query.filter_by(email="test_user_1@calorio.com").first()
 
     assert response.status_code == 200
     assert response.json == {
         "message": "Login Successful.",
-        "user": {
-            "email": "test_user_1@calorio.com",
-            "first_name": "test",
-            "id": 1,
-            "last_name": "user_1"
-        }
+        "user": user_schema.dump(user)
     }
-    verify_user_cookie(new_user, response.headers["Set-Cookie"])
+    verify_user_cookie(user, response.headers["Set-Cookie"])
 
 
 def test_user_login_failure(client: FlaskClient) -> None:
@@ -82,7 +79,7 @@ def test_user_signup_failure(client: FlaskClient) -> None:
     assert response.json == {"message": "Invalid Input"}
 
     invalid_payload.update({
-        "email": "test_user@calorio.com",
+        "email": "test_user_2@calorio.com",
         "password": "abc"
     })
     response = client.post("/signup", data=invalid_payload)

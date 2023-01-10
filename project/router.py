@@ -132,10 +132,11 @@ def get_daily_diet(user, weekday):
             picture_url = request.values.get('item_picture_url')
             item = item_schema.add_new_item(name, calories, picture_url)
         else:
-            item = item_schema.query_item_by_id(item_id)
+            item = item_schema.query_and_increment_item_by_id(item_id)
 
         user_item_schema = UserItemSchema()
-        user_item_schema.add_user_item(user["id"], item["id"], calories, quantity, weekday)
+        user_item_schema.add_user_item(user["id"], item["id"], item["calories"],
+                                       quantity, weekday)
         return {"message": "Diet update successful", "item": item}, 201
 
     if request.method == "GET":

@@ -1,3 +1,4 @@
+from cryptography.fernet import InvalidToken
 from flask import request
 
 from project.encryption import fernet
@@ -23,7 +24,7 @@ def require_login(function):
             kwargs['user'] = user
             return function(**kwargs)
 
-        except ValueError:
+        except (ValueError, InvalidToken):
             return {"message": "User not logged in."}, 403
 
     wrapper.__name__ = f"{function.__name__}_wrapper"
