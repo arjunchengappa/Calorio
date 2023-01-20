@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 
@@ -13,6 +14,7 @@ def create_app(config_file: str = '../config.json') -> Flask:
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
     db.init_app(app)
     marsh.init_app(app)
+    CORS(app)
 
     with app.app_context():
         db.drop_all()

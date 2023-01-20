@@ -37,7 +37,7 @@ def get_top_food_items():
     database.
     """
     item_schema = ItemSchema(many=True)
-    return item_schema.query_top_items()
+    return {'top_food_items': item_schema.query_top_items()}
 
 
 @calorio_blueprint.route("/signup", methods=["POST"])
