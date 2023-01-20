@@ -12,8 +12,6 @@ class UserSchema(marsh.Schema):
         model = User
         load_instance = True
     id = fields.Integer()
-    first_name = fields.Str()
-    last_name = fields.Str()
     email = fields.Email()
 
     def query_all_users(self):
@@ -29,18 +27,11 @@ class UserSchema(marsh.Schema):
         return self.dump(query)
 
     def add_new_user(self, first_name, last_name, email, password):
-        error = self.validate({
-            "email": email,
-            "first_name": first_name,
-            "last_name": last_name
-        })
 
-        if error or not validate_password(password):
+        if not validate_password(password):
             raise ValidationError("Invalid Input")
 
         user = User(
-            first_name=first_name,
-            last_name=last_name,
             email=email,
             password=password
         )
@@ -59,7 +50,6 @@ class ItemSchema(marsh.Schema):
     name = fields.Str()
     calories = fields.Integer()
     consumer_count = fields.Integer()
-    picture_url = fields.URL()
 
     def query_all_items(self):
         query = Item.query.filter_by()
@@ -69,17 +59,17 @@ class ItemSchema(marsh.Schema):
         query = Item.query.order_by(Item.consumer_count).limit(10)
         return self.dump(query, many=True)
 
-    def query_and_increment_item_by_id(self, item_id):
-        item = Item.query.filter_by(id=item_id).first()
-        item.consumer_count += 1
-        db.session.commit()
-        return self.dump(item)
-
-    def add_new_item(self, name, calories, picture_url):
-        item = Item(name=name, calories=calories, picture_url=picture_url, consumer_count=1)
-        db.session.add(item)
-        db.session.commit()
-        return self.dump(item)
+    def add_or_update_item(self, name, calories):
+        item = Item.query.filter_by(name=name).first()
+        if item:
+            item.consumer_count += 1
+            db.session.commit()
+            return self.dump(item)
+        else:
+            item = Item(name=name, calories=calories, consumer_count=1)
+            db.session.add(item)
+            db.session.commit()
+            return self.dump(item)
 
 
 class UserItemSchema(marsh.Schema):
@@ -88,9 +78,7 @@ class UserItemSchema(marsh.Schema):
 
     id = fields.Integer()
     item = fields.Method("get_item")
-    total_calories = fields.Integer()
-    quantity = fields.Str()
-    weekday = fields.Integer()
+    consumed_date = fields.Date()
 
     @staticmethod
     def get_item(user_item: UserItem):
@@ -99,20 +87,18 @@ class UserItemSchema(marsh.Schema):
         return item_schema.dump(item)
 
     def query_user_items(self, user_id):
-        query = UserItem.query.filter_by(user_id=user_id).order_by(UserItem.weekday)
+        query = UserItem.query.filter_by(user_id=user_id).order_by(UserItem.consumed_date)
         return self.dump(query, many=True)
 
-    def query_user_items_by_weekday(self, user_id, weekday):
-        query = UserItem.query.filter_by(user_id=user_id, weekday=weekday)
+    def query_user_items_by_date(self, user_id, filter_date):
+        query = UserItem.query.filter_by(user_id=user_id, consumed_date=filter_date)
         return self.dump(query, many=True)
 
-    def add_user_item(self, user_id, item_id, calories, quantity, weekday):
+    def add_user_item(self, user_id, item_id, consumed_date):
         user_item = UserItem(
             user_id=user_id,
             item_id=item_id,
-            total_calories=calories*quantity,
-            quantity=quantity,
-            weekday=weekday
+            consumed_date=consumed_date
         )
         db.session.add(user_item)
         db.session.commit()

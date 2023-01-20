@@ -17,8 +17,6 @@ def test_new_user_signup_success(client: FlaskClient) -> None:
     response = client.post("/signup", data={
         "email": "test_user@calorio.com",
         "password": "password123",
-        "first_name": "test",
-        "last_name": "user",
     })
 
     # Test if database entry is is as expected
@@ -31,9 +29,7 @@ def test_new_user_signup_success(client: FlaskClient) -> None:
         "message": "Registration successful",
         "user": {
             "email": "test_user@calorio.com",
-            "first_name": "test",
             "id": 1,
-            "last_name": "user"
         }
     }
 
@@ -69,19 +65,9 @@ def test_user_login_failure(client: FlaskClient) -> None:
 
 def test_user_signup_failure(client: FlaskClient) -> None:
     invalid_payload = {
-        "email": "test_user#calorio.com",
-        "password": "password123",
-        "first_name": "test",
-        "last_name": "user",
-    }
-    response = client.post("/signup", data=invalid_payload)
-    assert response.status_code == 400
-    assert response.json == {"message": "Invalid Input"}
-
-    invalid_payload.update({
         "email": "test_user_2@calorio.com",
-        "password": "abc"
-    })
+        "password": "pas",
+    }
     response = client.post("/signup", data=invalid_payload)
     assert response.status_code == 400
     assert response.json == {"message": "Invalid Input"}

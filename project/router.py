@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Blueprint, request
 from marshmallow.exceptions import ValidationError
 
@@ -103,50 +105,35 @@ def logout(user):
     return {"message": f"{user['email']} logged out successfully"}, 200, {"Set-Cookie": "logged_in=$"}
 
 
-@calorio_blueprint.route('/diet')
+@calorio_blueprint.route('/diet', methods=['GET', 'POST'])
 @require_login
 def get_diet(user):
     """
     Displays a brief overview of the users diet.
     """
-    user_item_schema = UserItemSchema(many=True)
-    user_items = user_item_schema.query_user_items(user_id=user["id"])
-    return {"diet": user_items}, 200
+    user_item_schema = UserItemSchema()
+    item_schema = ItemSchema()
 
+    if request.method == 'POST':
+        item_name = request.values.get('item_name')
+        consumed_date = request.values.get('consumed_date')
+        item_calories = request.values.get('item_calories')
 
-@calorio_blueprint.route('/diet/<weekday>', methods=["GET", "POST"])
-@require_login
-def get_daily_diet(user, weekday):
-    """
-    Returns a detailed diet of the user on a particular day.
-    """
-    if request.method == "POST":
-        item_schema = ItemSchema()
+        consumed_date = datetime.strptime(consumed_date, '%Y-%m-%d')
 
-        item_id = request.values.get('item_id')
-        quantity = int(request.values.get('quantity'))
+        item = item_schema.add_or_update_item(name=item_name, calories=item_calories)
+        user_item = user_item_schema.add_user_item(user['id'], item['id'], consumed_date)
 
-        if not item_id:
-            name = request.values.get('item_name')
-            calories = request.values.get('item_calories')
-            picture_url = request.values.get('item_picture_url')
-            item = item_schema.add_new_item(name, calories, picture_url)
+        return {'message': 'Updated User Diet', 'user_item': user_item}, 201
+
+    if request.method == 'GET':
+        filter_date = request.values.get('filter_date')
+
+        if filter_date:
+            user_items = user_item_schema.query_user_items_by_date(user['id'], filter_date)
         else:
-            item = item_schema.query_and_increment_item_by_id(item_id)
+            user_items = user_item_schema.query_user_items(user['id'])
 
-        user_item_schema = UserItemSchema()
-        user_item_schema.add_user_item(user["id"], item["id"], item["calories"],
-                                       quantity, weekday)
-        return {"message": "Diet update successful", "item": item}, 201
+        items = item_schema.query_all_items()
 
-    if request.method == "GET":
-        user_item_schema = UserItemSchema(many=True)
-        user_items = user_item_schema.query_user_items_by_weekday(user["id"], weekday)
-
-        item_schema = ItemSchema(many=True)
-        all_items = item_schema.query_all_items()
-
-        return {
-            "diet": user_items,
-            "items": all_items,
-        }
+        return {'user_items': user_items, 'items': items}, 200

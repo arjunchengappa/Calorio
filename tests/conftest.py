@@ -31,8 +31,6 @@ def init_database(client: FlaskClient) -> None:
     user = User(
         email="test_user_1@calorio.com",
         password="password123",
-        first_name="test",
-        last_name="user_1"
     )
     db.session.add(user)
     db.session.commit()
