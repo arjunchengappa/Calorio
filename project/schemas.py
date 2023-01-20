@@ -56,7 +56,7 @@ class ItemSchema(marsh.Schema):
         return self.dump(query, many=True)
 
     def query_top_items(self):
-        query = Item.query.order_by(Item.consumer_count).limit(10)
+        query = Item.query.order_by(Item.consumer_count.desc()).limit(10)
         return self.dump(query, many=True)
 
     def add_or_update_item(self, name, calories):
