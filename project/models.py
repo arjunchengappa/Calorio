@@ -12,7 +12,6 @@ class User(db.Model):
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20))
-    calories = db.Column(db.Integer)
     consumer_count = db.Column(db.Integer, default=0)
 
 
@@ -20,4 +19,5 @@ class UserItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     item_id = db.Column(db.Integer, db.ForeignKey('item.id'))
+    calories = db.Column(db.Integer)
     consumed_date = db.Column(db.Date)

@@ -40,69 +40,21 @@ def get_top_food_items():
     return {'top_food_items': item_schema.query_top_items()}
 
 
-@calorio_blueprint.route("/signup", methods=["POST"])
-def signup():
+@calorio_blueprint.route("/sign-in", methods=["POST"])
+def sign_in():
     """
     Registers a user.
     """
     user_schema = UserSchema()
-    first_name = request.values.get('first_name')
-    last_name = request.values.get('last_name')
-    email = request.values.get('email')
-    password = request.values.get('password')
-
-    if user_schema.query_user_by_email(email):
-        return {"message": "Email already in use."}, 400
+    email = request.json.get('email')
+    password = request.json.get('password')
 
     try:
-        user = user_schema.add_new_user(first_name, last_name, email, password)
+        user = user_schema.query_user(email, password)
     except ValidationError:
         return {"message": "Invalid Input"}, 400
 
-    encrypted_password = fernet.encrypt(password.encode())
-
-    return (
-        {"message": "Registration successful", "user": user},
-        201,
-        {'Set-Cookie': f'logged_in={email}${encrypted_password.decode()}'}
-    )
-
-
-@calorio_blueprint.route('/login', methods=["POST"])
-def login():
-    """
-    Logs in a user. Sets a cookie in browser to identify user.
-    """
-    user_schema = UserSchema()
-    email = request.values.get('email')
-    password = request.values.get('password')
-
-    user = user_schema.query_user(email, password)
-
-    encrypted_password = fernet.encrypt(password.encode())
-
-    if user:
-        return (
-            {
-                "message": "Login Successful.",
-                "user": user
-            },
-            200,
-            {
-                "Set-Cookie": f"logged_in={email}${encrypted_password.decode()}"
-            }
-        )
-    else:
-        return {"message": "Login Unsuccessful."}, 403
-
-
-@calorio_blueprint.route('/logout')
-@require_login
-def logout(user):
-    """
-    Logs out a user. Resets the cookie that was set while logging in.
-    """
-    return {"message": f"{user['email']} logged out successfully"}, 200, {"Set-Cookie": "logged_in=$"}
+    return ({"message": "Registration successful", "user": user}, 200)
 
 
 @calorio_blueprint.route('/diet', methods=['GET', 'POST'])
@@ -115,14 +67,14 @@ def get_diet(user):
     item_schema = ItemSchema()
 
     if request.method == 'POST':
-        item_name = request.values.get('item_name')
-        consumed_date = request.values.get('consumed_date')
-        item_calories = request.values.get('item_calories')
+        item_name = request.json.get('foodItemName')
+        consumed_date = request.json.get('consumedDate')
+        item_calories = request.json.get('foodItemCalories')
 
         consumed_date = datetime.strptime(consumed_date, '%Y-%m-%d')
 
-        item = item_schema.add_or_update_item(name=item_name, calories=item_calories)
-        user_item = user_item_schema.add_user_item(user['id'], item['id'], consumed_date)
+        item = item_schema.add_or_update_item(name=item_name)
+        user_item = user_item_schema.add_user_item(user['id'], item['id'], item_calories, consumed_date)
 
         return {'message': 'Updated User Diet', 'user_item': user_item}, 201
 
