@@ -4,7 +4,6 @@ from flask import Blueprint, request
 from marshmallow.exceptions import ValidationError
 
 from project.decorators import require_admin, require_login
-from project.encryption import fernet
 from project.schemas import ItemSchema, UserItemSchema, UserSchema
 
 calorio_blueprint = Blueprint('calorio', __name__, template_folder='templates')

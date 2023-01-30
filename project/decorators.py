@@ -1,8 +1,7 @@
-from cryptography.fernet import InvalidToken
-from flask import request
 from base64 import b64decode
 
-from project.encryption import fernet
+from flask import request
+
 from project.schemas import UserSchema
 
 user_schema = UserSchema()
@@ -25,7 +24,7 @@ def require_login(function):
             kwargs['user'] = user
             return function(**kwargs)
 
-        except (AttributeError, InvalidToken):
+        except AttributeError:
             return {"message": "User not logged in."}, 403
 
     wrapper.__name__ = f"{function.__name__}_wrapper"

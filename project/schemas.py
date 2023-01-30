@@ -17,7 +17,7 @@ class UserSchema(marsh.Schema):
     def query_all_users(self):
         query = User.query.all()
         return self.dump(query, many=True)
-    
+
     def add_new_user(self, email, password):
 
         if not validate_password(password):

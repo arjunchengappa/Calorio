@@ -1,16 +1,9 @@
 from flask.testing import FlaskClient
 
-from project.encryption import fernet
 from project.models import User
 from project.schemas import UserSchema
 
 user_schema = UserSchema()
-
-
-def verify_user_cookie(user: User, cookie: str):
-    cookie_email, cookie_password = cookie[10:].split("$")
-    assert user.email == cookie_email
-    assert user.password == fernet.decrypt(cookie_password).decode()
 
 
 def test_new_user_signup_success(client: FlaskClient) -> None:

@@ -1,7 +1,8 @@
+from base64 import b64encode
+
 from flask.testing import FlaskClient
 
 from project.schemas import UserItemSchema
-from base64 import b64encode
 
 user_item_schema = UserItemSchema()
 
@@ -111,7 +112,7 @@ def test_view_diet_with_filter(client: FlaskClient, init_database: None) -> None
         ],
         "user_items": [
             {
-                "consumed_date": "2023-01-12", "id": 1,"calories": 20,
+                "consumed_date": "2023-01-12", "id": 1, "calories": 20,
                 "item": {"consumer_count": 2, "id": 1, "name": "apples"}
             },
             {
