@@ -54,7 +54,7 @@ def sign_in():
     except ValidationError:
         return {"message": "Invalid Input"}, 400
 
-    return ({"message": "Registration successful", "user": user}, 200)
+    return ({"message": "Sign in successful", "user": user}, 200)
 
 
 @calorio_blueprint.route('/diet', methods=['GET', 'POST'])

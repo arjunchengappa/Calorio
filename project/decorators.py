@@ -25,7 +25,7 @@ def require_login(function):
             kwargs['user'] = user
             return function(**kwargs)
 
-        except (ValueError, InvalidToken):
+        except (AttributeError, InvalidToken):
             return {"message": "User not logged in."}, 403
 
     wrapper.__name__ = f"{function.__name__}_wrapper"
