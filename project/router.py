@@ -45,15 +45,22 @@ def sign_in():
     Registers a user.
     """
     user_schema = UserSchema()
+    first_name = request.json.get('firstName')
+    last_name = request.json.get('lastName')
     email = request.json.get('email')
     password = request.json.get('password')
 
     try:
-        user = user_schema.query_user(email, password)
+        if first_name:
+            user = user_schema.add_new_user(first_name, last_name, email, password)
+        else:
+            user = user_schema.query_user(email, password)
     except ValidationError:
         return {"message": "Invalid Input"}, 400
-
-    return ({"message": "Sign in successful", "user": user}, 200)
+    if user:
+        return ({"message": "Sign in successful", "user": user}, 200)
+    else:
+        return {"message": "Invalid Attempt"}, 403
 
 
 @calorio_blueprint.route('/diet', methods=['GET', 'POST'])

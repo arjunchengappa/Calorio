@@ -9,6 +9,13 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
 
 
+class UserProfile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    first_name = db.Column(db.String(20))
+    last_name = db.Column(db.String(20))
+
+
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20))

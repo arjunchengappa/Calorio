@@ -2,8 +2,9 @@ from marshmallow import fields
 from marshmallow.exceptions import ValidationError
 
 from project import db, marsh
-from project.models import Item, User, UserItem
+from project.models import Item, User, UserItem, UserProfile
 from project.validators import validate_password
+from util.decorators import transactional
 
 
 # Schema
@@ -18,8 +19,8 @@ class UserSchema(marsh.Schema):
         query = User.query.all()
         return self.dump(query, many=True)
 
-    def add_new_user(self, email, password):
-
+    @transactional
+    def add_new_user(self, first_name, last_name, email, password):
         if not validate_password(password):
             raise ValidationError("Invalid Input")
 
@@ -27,10 +28,16 @@ class UserSchema(marsh.Schema):
             email=email,
             password=password
         )
-
         db.session.add(user)
-        db.session.commit()
+        db.session.flush()
 
+        user_profile = UserProfile(
+            user_id=user.id,
+            first_name=first_name,
+            last_name=last_name
+        )
+        db.session.add(user_profile)
+        db.session.commit()
         return self.dump(user)
 
     def query_user(self, email, password):
@@ -38,8 +45,6 @@ class UserSchema(marsh.Schema):
         if user:
             if user.password == password:
                 return self.dump(user)
-        else:
-            return self.add_new_user(email, password)
 
 
 class ItemSchema(marsh.Schema):
