@@ -2,6 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 db = SQLAlchemy()
 marsh = Marshmallow()
@@ -12,13 +13,13 @@ def create_app(config_file: str = '../config.json') -> Flask:
 
     register_blueprints(app)
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
+
     db.init_app(app)
+    migrate = Migrate(app, db)
+    migrate.init_app(app, db)
+
     marsh.init_app(app)
     CORS(app)
-
-    with app.app_context():
-        db.drop_all()
-        db.create_all()
 
     return app
 

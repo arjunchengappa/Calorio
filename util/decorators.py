@@ -1,4 +1,6 @@
 from project import db
+from sqlalchemy.exc import IntegrityError
+import logging
 
 
 def transactional(function):
@@ -7,7 +9,8 @@ def transactional(function):
             retval = function(*args, **kwargs)
             db.session.commit()
             return retval
-        except Exception as e:
+        except IntegrityError as e:
             db.session.rollback()
-            raise e
+            logging.error({'Integrity Error': e})
+            
     return wrapper
