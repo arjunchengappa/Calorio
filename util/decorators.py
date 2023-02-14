@@ -11,6 +11,7 @@ def transactional(function):
             return retval
         except IntegrityError as e:
             db.session.rollback()
-            logging.error({'Integrity Error': e})
-            
+            logging.error(e)
+            raise e
+
     return wrapper

@@ -2,6 +2,7 @@ from datetime import datetime
 
 from flask import Blueprint, request
 from marshmallow.exceptions import ValidationError
+from sqlalchemy.exc import IntegrityError
 
 from project.decorators import require_admin, require_login
 from project.schemas import ItemSchema, UserItemSchema, UserSchema
@@ -56,11 +57,13 @@ def sign_in():
         else:
             user = user_schema.query_user(email, password)
     except ValidationError:
-        return {"message": "Invalid Input"}, 400
+        return "Password should be atleast 8 characters long.", 400
+    except IntegrityError:
+        return "Email already registered. Please login.", 400
     if user:
         return ({"message": "Sign in successful", "user": user}, 200)
     else:
-        return {"message": "Invalid Attempt"}, 403
+        return "Email and Password do not match.", 403
 
 
 @calorio_blueprint.route('/diet', methods=['GET', 'POST'])
